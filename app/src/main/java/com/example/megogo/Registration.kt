@@ -7,9 +7,12 @@ import android.view.View
 import android.widget.EditText
 import android.widget.Spinner
 import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class Registration : AppCompatActivity() {
     private lateinit var email : EditText
@@ -65,59 +68,55 @@ class Registration : AppCompatActivity() {
         }
     }
 
-    private fun Exists(username: String, email: String): Boolean {
-        var isAuthenticated = false
-        var isAuthenticated1 = false
-        var bool = false
-        GlobalScope.launch {
-            val user = db.userDao().getUserByUsername(username)
-            val user1 = db.userDao().getUserByEmail(email)
-            isAuthenticated = user != null
-            isAuthenticated1 = user1 != null
-            runOnUiThread {
-                if (isAuthenticated || isAuthenticated1) {
-                    bool = true
+    fun Register(view: View) {
+        if (email.text.isNotEmpty() && login.text.isNotEmpty() && pass.text.isNotEmpty() && repPass.text.isNotEmpty()) {
+            if (isValidEmail(email.text.toString())) {
+                if (isValidLogin(login.text.toString())) {
+                    if (isValidPassword(pass.text.toString())) {
+                        if (pass.text.toString() == repPass.text.toString()) {
+                            // Используем lifecycleScope для работы в фоновом потоке
+                            lifecycleScope.launch(Dispatchers.IO) {
+                                // Проверка существования пользователя с таким логином или email
+                                val user = db.userDao().getUserByUsernameOrEmail(login.text.toString(), email.text.toString())
+
+                                // Проверка, если пользователь не найден (то есть можно зарегистрировать)
+                                if (user == null) {
+                                    // Если аккаунт не существует, регистрируем пользователя
+                                    registerUser(login.text.toString(), email.text.toString(), pass.text.toString(), role.selectedItem.toString())
+
+                                    // Очистка полей
+                                    withContext(Dispatchers.Main) {
+                                        email.text.clear()
+                                        login.text.clear()
+                                        pass.text.clear()
+                                        repPass.text.clear()
+                                    }
+                                } else {
+                                    // Если пользователь уже существует с таким логином или email
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(
+                                            this@Registration,
+                                            "An account with such email or such login already exists",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                            }
+                        } else {
+                            Toast.makeText(this@Registration, "The passwords aren't matching", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        Toast.makeText(this@Registration, "Invalid Password", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Toast.makeText(this@Registration, "Invalid Login", Toast.LENGTH_SHORT).show()
                 }
+            } else {
+                Toast.makeText(this@Registration, "Invalid Email", Toast.LENGTH_SHORT).show()
             }
+        } else {
+            Toast.makeText(this@Registration, "Fill in the blanks", Toast.LENGTH_SHORT).show()
         }
-        return bool
     }
 
-    fun Register(view: View) {
-        if (email.text.isNotEmpty() && login.text.isNotEmpty() && pass.text.isNotEmpty() && repPass.text.isNotEmpty())
-        {
-            if (isValidEmail(email.text.toString()))
-            {
-                if (isValidLogin(login.text.toString()))
-                {
-                    if (isValidPassword(pass.text.toString()))
-                    {
-                        if (pass.text.toString() == repPass.text.toString())
-                        {
-                            if (!Exists(login.text.toString(), email.text.toString()))
-                            {
-                                registerUser(login.text.toString(), email.text.toString(), pass.text.toString(), role.selectedItem.toString())
-                                email.text.clear()
-                                login.text.clear()
-                                pass.text.clear()
-                                repPass.text.clear()
-                            }
-                            else
-                                Toast.makeText(this@Registration, "An account with such email or such login already exists", Toast.LENGTH_SHORT).show()
-                        }
-                        else
-                            Toast.makeText(this@Registration, "The passwords aren't matching", Toast.LENGTH_SHORT).show()
-                    }
-                    else
-                        Toast.makeText(this@Registration, "Invalid Password", Toast.LENGTH_SHORT).show()
-                }
-                else
-                    Toast.makeText(this@Registration, "Invalid Login", Toast.LENGTH_SHORT).show()
-            }
-            else
-                Toast.makeText(this@Registration, "Invalid Email", Toast.LENGTH_SHORT).show()
-        }
-        else
-            Toast.makeText(this@Registration, "Fill in the blanks", Toast.LENGTH_SHORT).show()
-    }
 }

@@ -28,11 +28,11 @@ class Authorisation : AppCompatActivity() {
 
         if (pref.getBoolean("IsAdminLogged", false))
         {
-            startActivity(Intent(this@Authorisation, MainForAdmin::class.java))
+            startActivity(Intent(this@Authorisation, MainActivityForAdm::class.java))
         }
         else if (pref.getBoolean("IsUserLogged", false))
         {
-            startActivity(Intent(this@Authorisation, MainForUser::class.java))
+            startActivity(Intent(this@Authorisation, MainActivityForUser::class.java))
         }
     }
 
@@ -60,12 +60,13 @@ class Authorisation : AppCompatActivity() {
                     if (user!!.role == "User") {
                         pref.edit().putBoolean("IsAdminLogged", false).apply()
                         pref.edit().putBoolean("IsUserLogged", true).apply()
-                        startActivity(Intent(this@Authorisation, MainForUser::class.java))
+                        pref.edit().putString("Online", user.username).apply()
+                        startActivity(Intent(this@Authorisation, MainActivityForUser::class.java))
                     }
                     else if (user.role == "Admin") {
                         pref.edit().putBoolean("IsUserLogged", false).apply()
                         pref.edit().putBoolean("IsAdminLogged", true).apply()
-                        startActivity(Intent(this@Authorisation, MainForAdmin::class.java))
+                        startActivity(Intent(this@Authorisation, MainActivityForAdm::class.java))
                     }
                 } else {
                     Toast.makeText(this@Authorisation, "Invalid username or password", Toast.LENGTH_SHORT).show()
