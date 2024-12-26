@@ -37,34 +37,11 @@ object DatabaseClient {
                         CinemaDatabase::class.java,
                         "cinema_database"
                     )
-                        .addMigrations(MIGRATION_1_2)
                         .build()
                 }
             }
         }
         return instance!!
-    }
-}
-
-
-
-val MIGRATION_1_2 = object : Migration(1, 2) {
-    override fun migrate(database: SupportSQLiteDatabase) {
-        // Создаем новую таблицу tickets
-        database.execSQL(
-            """
-            CREATE TABLE IF NOT EXISTS tickets (
-                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                row INTEGER NOT NULL,
-                seat INTEGER NOT NULL,
-                startTime TEXT NOT NULL,
-                endTime TEXT NOT NULL,
-                movieId INTEGER NOT NULL,
-                ownerUsername TEXT DEFAULT NULL,
-                FOREIGN KEY(movieId) REFERENCES movies(id) ON DELETE CASCADE
-            )
-            """.trimIndent()
-        )
     }
 }
 
@@ -116,10 +93,6 @@ class CinemaRepository(
             }
             ticketDao.insertTickets(tickets)
         }
-    }
-
-    fun purchaseTicket(ticketId: Long, username: String) {
-        ticketDao.updateTicketOwner(ticketId, username)
     }
 }
 
@@ -218,8 +191,6 @@ data class User(
     indices = [Index(value = ["movieId"])]
 )
 
-
-
 data class Ticket(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val row: Int,
@@ -255,4 +226,10 @@ interface TicketDao {
 
     @Query("SELECT * FROM tickets WHERE movieId = :movieId")
     fun getTicketsByMovie(movieId: Long): List<Ticket>
+
+    @Query("SELECT * FROM tickets WHERE ownerUsername = :username")
+    fun getBoughtTicketsByUser(username: String): List<Ticket>
+
+    @Query("UPDATE tickets SET ownerUsername = NULL WHERE id = :ticketId")
+    fun refundTicket(ticketId: Long)
 }

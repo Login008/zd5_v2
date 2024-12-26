@@ -156,10 +156,9 @@ class AdditionMovieFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(requireContext(), "Error adding movie: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Error adding movie", Toast.LENGTH_SHORT).show()
                 }
             }
         }
     }
-
 }

@@ -43,14 +43,6 @@ class MovieAdapterAdm(
     }
 
     override fun getItemCount(): Int = movies.size
-
-    fun removeMovie(movie: Movie) {
-        val position = movies.indexOf(movie)
-        if (position != -1) {
-            movies.removeAt(position)
-            notifyItemRemoved(position)
-        }
-    }
 }
 
 
@@ -138,3 +130,49 @@ class TicketAdapter(private var tickets: List<Ticket>, private val onTicketClick
 }
 
 
+
+// Класс для объединения билета и фильма в один объект
+data class TicketWithMovie(
+    val ticket: Ticket,    // Информация о билете
+    val movie: Movie?       // Информация о фильме
+)
+
+class MyTicketAdapter(
+    private var ticketList: List<TicketWithMovie>,
+    private val onRefundTicketClicked: (TicketWithMovie) -> Unit
+) : RecyclerView.Adapter<MyTicketAdapter.TicketViewHolder>() {
+
+    inner class TicketViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val ticketInfo: TextView = view.findViewById(R.id.ticket_info)
+        val movieTitle: TextView = view.findViewById(R.id.movie_title)
+        val movieYear: TextView = view.findViewById(R.id.movie_year)
+        val refundButton: Button = view.findViewById(R.id.refund_button)
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TicketViewHolder {
+        // Теперь используем my_item_ticket.xml
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.my_item_ticket, parent, false)
+        return TicketViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: TicketViewHolder, position: Int) {
+        val ticketWithMovie = ticketList[position]
+
+        // Отображаем информацию о билете
+        holder.ticketInfo.text = "Row: ${ticketWithMovie.ticket.row}, Seat: ${ticketWithMovie.ticket.seat}"
+        holder.movieTitle.text = ticketWithMovie.movie!!.title
+        holder.movieYear.text = ticketWithMovie.movie.year
+
+        // Обработчик нажатия на кнопку "Вернуть средства"
+        holder.refundButton.setOnClickListener {
+            onRefundTicketClicked(ticketWithMovie)
+        }
+    }
+
+    override fun getItemCount(): Int = ticketList.size
+
+    fun updateTickets(newTickets: List<TicketWithMovie>) {
+        ticketList = newTickets
+        notifyDataSetChanged()
+    }
+}

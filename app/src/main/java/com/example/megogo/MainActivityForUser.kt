@@ -22,6 +22,10 @@ class MainActivityForUser : AppCompatActivity() {
                     replaceFragment(SearchingMovieFragment())
                     true
                 }
+                R.id.nav_myTickets -> {
+                    replaceFragment(MyTicketsFragment())
+                    true
+                }
                 else -> false
             }
         }
